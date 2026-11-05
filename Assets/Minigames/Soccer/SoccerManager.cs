@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using TMPro;
 using UnityEngine;
 
 public class SoccerManager : MonoBehaviour
@@ -8,6 +9,8 @@ public class SoccerManager : MonoBehaviour
 
     [SerializeField] private float scoreA = 0;
     [SerializeField] private float scoreB = 0;
+
+    [SerializeField] private TextMeshProUGUI ScoreLabel;
 
     [SerializeField] private Vector3 originPos;
 
@@ -25,7 +28,7 @@ public class SoccerManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        ScoreLabel.text = $"{scoreA} - {scoreB}";
     }
 
     private async Task OnCollisionEnter(Collision collision)
@@ -35,19 +38,21 @@ public class SoccerManager : MonoBehaviour
             if (collision.gameObject == goalA)
             {
                 scoreB++;
-                ResetScore();
+                ResetBall();
             }
             if (collision.gameObject == goalB)
             {
                 scoreA++;
-                ResetScore();
+                ResetBall();
             }
         }
 
     }
 
-    public async void ResetScore()
+    public async void ResetBall()
     {
+        ScoreLabel.text = $"{scoreA} {scoreB}";
+
         scorable = false;
         await Task.Delay(waitTime * 1000);
 
