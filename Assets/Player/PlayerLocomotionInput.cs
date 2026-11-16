@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.InputSystem;
 
 public class PlayerLocomotionInput : MonoBehaviour, PlayerControls.IPlayerActions
@@ -13,6 +14,8 @@ public class PlayerLocomotionInput : MonoBehaviour, PlayerControls.IPlayerAction
     public bool isSprinting;
 
     public PlayerController playerController;
+
+
     private void OnEnable()
     {
         PlayerControls = new PlayerControls();
@@ -35,7 +38,7 @@ public class PlayerLocomotionInput : MonoBehaviour, PlayerControls.IPlayerAction
 
     void Update()
     {
-
+      
     }
 
     public void OnMove(InputAction.CallbackContext context)
@@ -43,8 +46,6 @@ public class PlayerLocomotionInput : MonoBehaviour, PlayerControls.IPlayerAction
         
             moveInput = context.ReadValue<Vector2>();
         
-
-
     }
 
     public void OnLook(InputAction.CallbackContext context)
@@ -60,13 +61,27 @@ public class PlayerLocomotionInput : MonoBehaviour, PlayerControls.IPlayerAction
 
     public void OnInteract(InputAction.CallbackContext context)
     {
+
         if (context.started){
             playerController.EquipThrowable();
+
+            Door[] doors = GameObject.FindObjectsByType<Door>();
+            Debug.Log("finding doors");
+
+            foreach (Door door in doors)
+            {
+                door.Open();
+                Debug.Log("found door");
+            }
         }
         if (context.canceled)
         {
             playerController.DropThrowable();
         }
+
+        
+      
+        
     }
 
     public void OnCrouch(InputAction.CallbackContext context)
@@ -78,7 +93,6 @@ public class PlayerLocomotionInput : MonoBehaviour, PlayerControls.IPlayerAction
         if (context.performed)
         {
             isJumping = true;
-
         }
     }
 
@@ -93,5 +107,10 @@ public class PlayerLocomotionInput : MonoBehaviour, PlayerControls.IPlayerAction
     public void OnSprint(InputAction.CallbackContext context)
     {
         isSprinting = context.performed;
+    }
+
+    public void OnLMB(InputAction.CallbackContext context)
+    {
+        
     }
 }

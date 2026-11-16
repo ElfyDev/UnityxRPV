@@ -34,6 +34,8 @@ public class PlayerController : MonoBehaviour
 
     [Header("Sprinting")]
     [SerializeField] private bool isSprinting = false;
+    [SerializeField] private bool isWalking = false;
+
     [SerializeField] private float stamina = 100f;
     [SerializeField] private float staminaDrainRate = 10f; // how quickly stamina drains while sprinting
     [SerializeField] private float staminaRegenRate = 5f; // how quickly stamina regenerates when not sprinting
@@ -56,7 +58,15 @@ public class PlayerController : MonoBehaviour
     [Header("Layers")]
 
     private int layermask;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+
+    [Header("Audio")]
+
+    public AudioSource walk;
+    public AudioSource sprint;
+    public AudioSource jump;
+    public AudioSource swoosh;
+
+
     void Start()
     {
        Cursor.lockState = CursorLockMode.Locked;
@@ -75,9 +85,27 @@ public class PlayerController : MonoBehaviour
 }
 
 
-// Update is called once per frame
-void Update()
+    // Update is called once per frame
+
+    float nextWalkTime = 0f; // start at 0 so first step can play
+    float nextJumpTime = 0f;
+
+    void Update()
     {
+        isWalking = moveInput.magnitude > 0.1;
+        if (isSprinting && !sprint.isPlaying && Time.time >= nextWalkTime)
+        {
+            sprint.Play();
+            nextWalkTime = Time.time + sprint.clip.length + 0.2f;
+
+        }
+        else if (isWalking && !walk.isPlaying && Time.time >= nextWalkTime)
+        {
+            walk.Play();
+            nextWalkTime = Time.time + walk.clip.length + 0.4f;
+
+        }
+
         Debug.DrawRay(playerCamera.transform.position, playerCamera.transform.forward * pickupRange, Color.red);
         if (heldObject != null)
         {
@@ -101,6 +129,8 @@ void Update()
         if (isSprintingInput && canSprint && moveInput.magnitude > 0)
         {
             isSprinting = true;
+
+
             speed = sprintSpeed;
 
             if (!infiniteStamina)
@@ -133,6 +163,7 @@ void Update()
         if (isJumping && isGrounded)
         {
             verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            jump.Play();
             
         }
         else if (isGrounded && verticalVelocity < 0)
@@ -144,13 +175,13 @@ void Update()
 
         verticalVelocity += gravity * Time.deltaTime;
 
-        Vector3 moveDirection = (transform.forward * moveInput.y) + (transform.right * moveInput.x); // move direction based on input and player orientation
+        Vector3 moveDirection = (transform.forward * moveInput.y) + (transform.right * moveInput.x); // move direction 
 
         characterController.Move((transform.up * verticalVelocity + moveDirection * speed) * Time.deltaTime);
         pitchRotation -= rotateInput.y * rotateSpeedY;
         yawRotation += rotateInput.x * rotateSpeedX;
         
-        pitchRotation = Mathf.Clamp(pitchRotation, -80f, 80f); // clamp the pitch rotation to prevent the camera from flipping over
+        pitchRotation = Mathf.Clamp(pitchRotation, -80f, 80f); // prevent the camera from flipping over
 
         characterController.transform.localRotation = Quaternion.Euler(0, yawRotation, 0);
         playerCamera.transform.localRotation = Quaternion.Euler(pitchRotation, 0, 0);
@@ -170,6 +201,7 @@ void Update()
             forceDirection.Normalize();
 
             rigidbody.AddForce(forceDirection * forceMagnitude, ForceMode.Impulse);
+            swoosh.Play();
         }
     }
 
@@ -188,6 +220,7 @@ void Update()
 
                 if (hit.collider.tag.Equals("Throwable"))
                 {
+                    swoosh.Play();
                     heldObject = hit.rigidbody;
                     heldObject.isKinematic = true;
 
@@ -196,21 +229,14 @@ void Update()
             }
         }
     }
-
     public void DropThrowable()
     {
         if (heldObject != null)
         {
+            swoosh.Play();
             heldObject.isKinematic = false;
             heldObject.AddForce(playerCamera.transform.forward * pushForce, ForceMode.Impulse);
             heldObject = null;
         }
     }
-
-    //         heldObject = that Rigidbody, isKinematic = true
-    // else (already holding something):
-    //     isKinematic = false, push it forward, heldObject = null
-
-    // every frame, if heldObject is not null:
-    //     move it to holdPoint
 }
